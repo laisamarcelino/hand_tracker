@@ -50,8 +50,11 @@ while True:
     # desenha em cima do frame BGR (o que o OpenCV mostra)
     img_bgr = drawer.draw(img_bgr, result)
 
+    # Desenha a palma e a ROI em uma cópia do frame para não poluir o desenho principal
+    img_out = drawer.draw(img_bgr.copy(), result, draw_palm=True, draw_palm_roi=False) 
+    
     # Exibe a webcam
-    cv2.imshow("Webcam", img_bgr)
+    cv2.imshow("Webcam", img_out)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
