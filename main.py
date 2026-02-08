@@ -1,5 +1,5 @@
 import cv2
-import time 
+import time
 import numpy as np
 from hand_tracker import HandTracker
 from draw import HandDrawer
@@ -31,33 +31,25 @@ while True:
         print("Falha ao capturar o frame da webcam.")
         break
 
-    img_bgr = cv2.flip(img_bgr, 1) # Espelha a imagem para efeito "selfie"
-    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB) # Converte BGR para RGB necessário para mediaPipe
-    img_rgb = np.ascontiguousarray(img_rgb)  # cria uma cópia contígua da img na memória
-    
-    # Calcula o timestamp em milissegundos / necessario para saber a ordem e o espaço dos frames
+    img_bgr = cv2.flip(img_bgr, 1)  # Espelha a imagem para efeito "selfie"
+    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)  # BGR -> RGB (MediaPipe)
+    img_rgb = np.ascontiguousarray(img_rgb)
+
+    # Timestamp em milissegundos (obrigatório no VIDEO mode)
     timestamp_ms = int((time.monotonic() - start) * 1000)
 
     # Detecta as mãos
     result = tracker.detect(img_rgb, timestamp_ms)
 
-    # DEBUG
-    n_land = len(result.hand_landmarks) if result.hand_landmarks else 0
-    n_world = len(result.hand_world_landmarks) if result.hand_world_landmarks else 0
-    n_hand  = len(result.handedness) if result.handedness else 0
-    print(f"hands={n_land} world={n_world} handedness={n_hand}", end="\r")
+    # Desenha esqueleto + palma
+    img_out = drawer.draw(img_bgr.copy(), result, draw_palm=True, draw_palm_roi=False)
 
-    # desenha em cima do frame BGR (o que o OpenCV mostra)
-    img_bgr = drawer.draw(img_bgr, result)
-
-    # Desenha a palma e a ROI em uma cópia do frame para não poluir o desenho principal
-    img_out = drawer.draw(img_bgr.copy(), result, draw_palm=True, draw_palm_roi=False) 
-    
     # Exibe a webcam
     cv2.imshow("Webcam", img_out)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
 # Fecha as janelas e libera o vídeo
+tracker.close()
 cap.release()
 cv2.destroyAllWindows()
